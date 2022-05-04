@@ -2,29 +2,42 @@
 #
 # TBD.
 
-__enable_exit_trap() {
-  trap "rm -rf ${__TMP_DIR}" "EXIT"
+# -------------------------------------- BEGIN STDOUT_CACHE -------------------------------------- #
+
+declare STDOUT_CACHE_FILE
+
+STDOUT_CACHE_FILE=""
+
+trap_exit_on() {
+  trap 'trap_exit' EXIT
 }
 
-__disable_trap() {
-  trap "-" "${1}"
+trap_exit_off() {
+  trap - EXIT
 }
 
-__enable_stdout_cache() {
-  mkdir -p "${__TMP_CACHE_DIR}"
-  touch "${__TMP_STDOUT_CACHE_FILE}"
-
-  exec 4>&1
-  exec 1>"${__TMP_STDOUT_CACHE_FILE}"
+trap_exit() {
+  rm -rf "$(dirname "${STDOUT_CACHE_FILE}")"
 }
 
-__print_stdout_cache() {
-  cat "${__TMP_STDOUT_CACHE_FILE}" >&4
+cache_stdout_on() {
+  exec 3<> /dev/null
+  exec 3>&1
+  mkdir "$(dirname "${STDOUT_CACHE_FILE}")"
+  exec 1> "${STDOUT_CACHE_FILE}"
 }
 
-__disable_stdout_cache() {
-  echo > "${__TMP_STDOUT_CACHE_FILE}"
-
-  exec 1>&4
-  exec 4>&-
+cache_stdout_off() {
+  exec 1>&3
+  exec 3>&-
 }
+
+write_stdout_cache() {
+  cat "${STDOUT_CACHE_FILE}"
+}
+
+flush_stdout_cache() {
+  > "${STDOUT_CACHE_FILE}"
+}
+
+# --------------------------------------- END STDOUT_CACHE --------------------------------------- #
